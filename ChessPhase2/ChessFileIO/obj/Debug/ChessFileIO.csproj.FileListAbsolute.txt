@@ -1,0 +1,12 @@
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessFileIO\ChessFileIO\bin\Debug\ChessFileIO.exe.config
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessFileIO\ChessFileIO\bin\Debug\ChessFileIO.exe
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessFileIO\ChessFileIO\bin\Debug\ChessFileIO.pdb
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessFileIO\ChessFileIO\obj\Debug\ChessFileIO.csprojResolveAssemblyReference.cache
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessFileIO\ChessFileIO\obj\Debug\ChessFileIO.exe
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessFileIO\ChessFileIO\obj\Debug\ChessFileIO.pdb
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessPhase2\ChessFileIO\bin\Debug\ChessFileIO.exe.config
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessPhase2\ChessFileIO\obj\Debug\ChessFileIO.exe
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessPhase2\ChessFileIO\obj\Debug\ChessFileIO.pdb
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessPhase2\ChessFileIO\bin\Debug\ChessFileIO.exe
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessPhase2\ChessFileIO\bin\Debug\ChessFileIO.pdb
+C:\Users\chance\Documents\Visual Studio 2015\Projects\ChessProjects\ChessPhase2\ChessFileIO\obj\Debug\ChessFileIO.csprojResolveAssemblyReference.cache
