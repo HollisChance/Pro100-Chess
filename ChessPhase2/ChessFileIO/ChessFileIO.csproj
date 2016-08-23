@@ -44,10 +44,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChessIO.cs" />
+    <Compile Include="Controllers\PieceController.cs" />
+    <Compile Include="Enums\Color.cs" />
     <Compile Include="Enums\PieceTypes.cs" />
+    <Compile Include="Models\Bishop.cs" />
     <Compile Include="Models\ChessBoard.cs" />
     <Compile Include="Models\ChessCoordinate.cs" />
+    <Compile Include="Models\ChessSquare.cs" />
     <Compile Include="Models\ChessToEnglishTranslator.cs" />
+    <Compile Include="Models\Game.cs" />
+    <Compile Include="Models\King.cs" />
+    <Compile Include="Models\Knight.cs" />
+    <Compile Include="Models\Pawn.cs" />
+    <Compile Include="Models\Piece.cs" />
+    <Compile Include="Models\Player.cs" />
+    <Compile Include="Models\Queen.cs" />
+    <Compile Include="Models\Rook.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

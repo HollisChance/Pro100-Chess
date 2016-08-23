@@ -10,7 +10,31 @@ namespace ChessFileIO.Models
     class ChessToEnglishTranslator
     {
 
-        
+        /// <summary>
+        /// translates a placement move (Kle1) into english(light King placed on e1)
+        /// uses groups from matcher. [0] = full statement, [1] = piece, [2] = color, [3] = placement file-rank
+        /// </summary>
+        /// <param name="match"></param>
+        /// <returns></returns>
+        public string PlacementToEnglish(Match match)
+        {
+            string piece = match.Groups[1].Value;
+            string color = match.Groups[2].Value;
+            string position = match.Groups[3].Value;
+
+            piece = CharToPiece(piece);
+
+            if (color.Equals("l"))
+            {
+                piece = "Light " + piece;
+            }
+            else if (color.Equals("d"))
+            {
+                piece = "Dark " + piece;
+            }
+            string moveInEnglish = piece + " placed on " + position;
+            return moveInEnglish;
+        }
 
         /// <summary>
         /// translates a move(c1 d2) to english, piece on c1 moved to d2

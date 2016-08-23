@@ -1,4 +1,6 @@
-﻿using ChessFileIO.Models;
+﻿using ChessFileIO.Controllers;
+using ChessFileIO.Enums;
+using ChessFileIO.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,14 +14,14 @@ namespace ChessFileIO
     class ChessIO
     {
         // 4 groups, 1st = full statement, 2nd = piece, 3rd = color, 4th = placement file-rank
-        const string PLACE_PIECE_PATTERN = @"([QKBNRP])([ld])([a-h][1-8])"; 
+        const string PLACE_PIECE_PATTERN = @"([QKBNRP])([ld])([a-h][1-8])";
         // 4 groups, 1st = all, 2nd = start rank-file, 3rd = end rank-file, 4th = optional capture
-        const string MOVE_PIECE_PATTERN = @"([a-h][1-8])\s+([a-h][1-8])(\*)?"; 
+        const string MOVE_PIECE_PATTERN = @"([a-h][1-8])\s+([a-h][1-8])(\*)?";
         // 5 groups, 1st = all, 2nd = piece 1 start r-f, 3rd = p1 end r-f, 4th = p2 start r-f, 5th = p2 end r-f
         const string CASTLE_MOVE_PATTERN = @"([a-h][1-8])\s([a-h][1-8])\s([a-h][1-8])\s([a-h][1-8])";
-        private ChessToEnglishTranslator translator = new ChessToEnglishTranslator();
+        private ChessToEnglishTranslator _translator = new ChessToEnglishTranslator();
 
-        public void ReadChessFile(string fileName, ChessBoard board)
+        public void ReadChessFile(string fileName, PieceController controller, ChessBoard board, Game game)
         {
             try
             {
@@ -30,7 +32,7 @@ namespace ChessFileIO
                     {
                         if (!(line.Equals(""))) // if line isn't empty
                         {
-                            ReadInput(line, board);
+                            ReadInput(controller, line, board, game);
                             board.PrintBoard();
                             Console.WriteLine();
                         }
@@ -39,30 +41,33 @@ namespace ChessFileIO
             }
             catch (Exception e)
             {
-                Console.WriteLine("file [" +fileName + "] could not be read");
+                Console.WriteLine("file [" + fileName + "] could not be read");
                 Console.WriteLine(e.Message);
             }
         }
 
-        public void ReadInput(string input, ChessBoard board)
+        public void ReadInput(PieceController controller, string input, ChessBoard board, Game game)
         {
             Match placePiece = RegexTest(input, PLACE_PIECE_PATTERN);
             Match movePiece = RegexTest(input, MOVE_PIECE_PATTERN);
             Match castleMove = RegexTest(input, CASTLE_MOVE_PATTERN);
-
             string move = "";
 
-            if (castleMove.Success)                     // if the match for castle move was successful, then it translates the castle move to english and to the board
+            if (castleMove.Success)                                 // if the match for castle move was successful, it translates the castle move to english and perfoms it on the board
             {
-                move = RegexToTranslation(castleMove, board);
+                move = _translator.CastleToEnglish(castleMove);     // gets an english translation of a castle move
+                CastleToBoard(controller, castleMove, board, game); // performs the castle move on the console board
             }
-            else if (movePiece.Success)                 // if the movePiece match succeeded, then it is translated and the piece is moved
+            else if (movePiece.Success)                             // if the movePiece match succeeded, then it is translated and the piece is moved
             {
-                move = RegexToTranslation(movePiece, board);
+
+                move = _translator.MoveToEnglish(movePiece);        // translates to english
+                MoveToBoard(controller, movePiece, board, game);    // takes the match info and moves a piece on the board
             }
-            else if (placePiece.Success)                // if the placePiece match succeeded it translates and places a piece
+            else if (placePiece.Success)                        // if the placePiece match succeeded it translates and places a piece
             {
-                move = RegexToTranslation(placePiece, board);
+                move = _translator.PlacementToEnglish(placePiece); //takes the match info and converts to english
+                PlacementToBoard(controller, placePiece, board);              // takes the match info and places piece on board
             }
             else
             {
@@ -73,77 +78,11 @@ namespace ChessFileIO
 
         public Match RegexTest(string line, string pattern)
         {
-            Match match = Regex.Match(line, pattern);            
+            Match match = Regex.Match(line, pattern);
             return match;
         }
 
-        public string RegexToTranslation(Match match, ChessBoard board)
-        {
-            string moveInEnglish = "";
-            if (match.Success)
-            {
-                moveInEnglish = TranslateMove(match, board); // translates the line into english and a board move, if the line matched
-            }
-            return moveInEnglish;
-        }
-
-        public string TranslateMove(Match match, ChessBoard board)
-        {
-            string translation = "";
-            int groupCount = match.Groups.Count;
-            
-            if (groupCount == 5) // means that the match is a castle move
-            {
-                translation = translator.CastleToEnglish(match);
-                CastleToBoard(match, board);
-            }
-            else if (groupCount == 4)
-            {
-                if (match.Groups[1].Length == 1)                // if group[1] (which would be a K, Q, etc..) is 1 character long then it is a placement command
-                {
-                    PlacementToBoard(match, board);             // takes the match info and places piece on board
-                    translation = PlacementToEnglish(match);    //takes the match info and converts to english
-                }
-                else                                            // group[1] isn't 1 in length, which means it is a movement command
-                {
-                    MoveToBoard(match, board);                  // takes the match info and moves a piece on the board
-                    translation = translator.MoveToEnglish(match);         // translates to english
-                }
-            }
-            else
-            {
-                translation = "ERROR: INVALID MOVE";
-            }
-
-            return translation;
-        }
-
-        /// <summary>
-        /// translates a placement move (Kle1) into english(light King placed on e1)
-        /// uses groups from matcher. [0] = full statement, [1] = piece, [2] = color, [3] = placement file-rank
-        /// </summary>
-        /// <param name="match"></param>
-        /// <returns></returns>
-        public string PlacementToEnglish(Match match)
-        {
-            string piece = match.Groups[1].Value;
-            string color = match.Groups[2].Value;
-            string position = match.Groups[3].Value;
-
-            piece = translator.CharToPiece(piece);
-
-            if (color.Equals("l"))
-            {
-                piece = "Light " + piece;
-            } else if (color.Equals("d"))
-            {
-                piece = "Dark " + piece;
-            }
-            string moveInEnglish = piece + " placed on " + position;
-            return moveInEnglish;
-        }
-
-        public void PlacementToBoard(Match match, ChessBoard board)
+        public void PlacementToBoard(PieceController controller, Match match, ChessBoard board)
         {
             string piece = match.Groups[1].Value;
             string color = match.Groups[2].Value;
@@ -157,10 +96,12 @@ namespace ChessFileIO
             char pieceChar;
             char.TryParse(piece, out pieceChar);
 
-            board.PlacePiece(placement, pieceChar);
+            Piece newPiece = CharToPiece(pieceChar);
+
+            controller.PlacePiece(board, placement, newPiece);
         }
 
-        public void MoveToBoard(Match match, ChessBoard board)
+        public void MoveToBoard(PieceController controller, Match match, ChessBoard board, Game game)
         {
             string start = match.Groups[1].Value;
             string end = match.Groups[2].Value;
@@ -168,127 +109,26 @@ namespace ChessFileIO
             ChessCoordinate startCoord = StringToChessCoordinate(start);
             ChessCoordinate endCoord = StringToChessCoordinate(end);
 
-            board.MovePiece(startCoord, endCoord);
+            controller.MovePiece(board, game, startCoord, endCoord);
         }
-        
-        public void CastleToBoard(Match match, ChessBoard board)
+
+        public void CastleToBoard(PieceController controller, Match match, ChessBoard board, Game game)
         {
             string start1 = match.Groups[1].Value;
             string end1 = match.Groups[2].Value;
             string start2 = match.Groups[3].Value;
             string end2 = match.Groups[4].Value;
 
-            ChessCoordinate startCoord1 = StringToChessCoordinate(start1);
-            ChessCoordinate endCoord1 = StringToChessCoordinate(end1);
+            ChessCoordinate startCoord1 = StringToChessCoordinate(start1); // kings start coordinate
+            ChessCoordinate endCoord1 = StringToChessCoordinate(end1); // king ends up
 
-            ChessCoordinate startCoord2 = StringToChessCoordinate(start2);
-            ChessCoordinate endCoord2 = StringToChessCoordinate(end2);
+            ChessCoordinate startCoord2 = StringToChessCoordinate(start2); // rook starts
+            ChessCoordinate endCoord2 = StringToChessCoordinate(end2); // rook ends
 
-            board.MovePiece(startCoord2, endCoord2);
+            controller.MovePiece(board, game, startCoord2, endCoord2);
 
-            board.MovePiece(startCoord1, endCoord1);
+            controller.MovePiece(board, game, startCoord1, endCoord1);
         }
-
-        ///// <summary>
-        ///// translates a move(c1 d2) to english, piece on c1 moved to d2
-        ///// // 4 groups, [0] = all, [1] = start rank-file, [2] = end rank-file, [3] = optional capture
-        ///// </summary>
-        ///// <param name="match"></param>
-        ///// <returns></returns>
-        //public string MoveToEnglish(Match match)
-        //{
-        //    string start = match.Groups[1].Value;
-        //    string end = match.Groups[2].Value;
-        //    string moveInEnglish = "Piece on " + start + " moved to " + end;
-        //    if (match.Groups[3].Value.Equals("*"))
-        //    {
-        //        moveInEnglish = moveInEnglish + " and captures piece at " + end;
-        //    }
-        //    return moveInEnglish;
-        //}
-
-        ///// <summary>
-        ///// translates castle move(e1 g1 h1 f1), king on e1 moves to g1, castling with rook on h1, which moves to f1
-        ///// 5 groups, [0] = all, [1] = king start r-f, [2] = king end r-f, [3] = rook start r-f, [4] = rook end r-f
-        ///// </summary>
-        ///// <param name="match"></param>
-        ///// <returns></returns>
-        //public string CastleToEnglish(Match match)
-        //{
-        //    string kingColor = "";
-        //    string kingStart = match.Groups[1].Value;
-        //    string kingEnd = match.Groups[2].Value;
-        //    string rookStart = match.Groups[3].Value;
-        //    string rookEnd = match.Groups[4].Value;
-        //    string side = "";
-        //    if (kingStart.Contains("1"))
-        //    {
-        //        kingColor = "Light";
-        //        if (rookStart.Contains("h"))
-        //        {
-        //            side = "Kingside";
-        //        }
-        //        else
-        //        {
-        //            side = "Queenside";
-        //        }
-        //    }
-        //    else if (kingStart.Contains("8"))
-        //    {
-        //        kingColor = "Dark";
-        //        if (rookStart.Contains("h"))
-        //        {
-        //            side = "Queenside";
-        //        }
-        //        else
-        //        {
-        //            side = "Kingside";
-        //        }
-        //    }
-        //    else
-        //    {
-        //        side = "invalid castle";
-        //    }
-        //        string moveInEnglish = kingColor + " King on " + kingStart + " performs a " + side + " castle with rook on " + rookStart
-        //        + ". King ends on " + kingEnd + " and rook ends on " + rookEnd;
-
-        //    return moveInEnglish;
-        //}
-
-        //public string CharToPiece(string pieceChar)
-        //{
-        //    string piece = pieceChar;
-
-        //    if (piece.Equals("K"))
-        //    {
-        //        piece = "King";
-        //    }
-        //    else if (piece.Equals("Q"))
-        //    {
-        //        piece = "Queen";
-        //    }
-        //    else if (piece.Equals("B"))
-        //    {
-        //        piece = "Bishop";
-        //    }
-        //    else if (piece.Equals("N"))
-        //    {
-        //        piece = "Knight";
-        //    }
-        //    else if (piece.Equals("R"))
-        //    {
-        //        piece = "Rook";
-        //    }
-        //    else if (piece.Equals("P"))
-        //    {
-        //        piece = "Pawn";
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("Invalid piece type");
-        //    }
-        //    return piece;
-        //}
 
         public ChessCoordinate StringToChessCoordinate(string coordinate)
         {
@@ -298,9 +138,49 @@ namespace ChessFileIO
             int.TryParse(rank, out rankNum);
             //Console.WriteLine("File = " + file + ", Rank = " + rank);
 
-            ChessCoordinate cc = new ChessCoordinate { File = file, Rank = rankNum };
+            ChessCoordinate cc = new ChessCoordinate() { File = file, Rank = rankNum };
             return cc;
         }
+
+        public Piece CharToPiece(char pieceChar)
+        {
+            Piece piece = new Bishop();
+
+            if (pieceChar == 'k' || pieceChar == 'K')
+            {
+                piece = new King();
+            }
+            else if (pieceChar == 'q' || pieceChar == 'Q')
+            {
+                piece = new Queen();
+            }
+            else if (pieceChar == 'r' || pieceChar == 'R')
+            {
+                piece = new Rook();
+            }
+            else if(pieceChar == 'b' || pieceChar == 'B')
+            {
+                piece = new Bishop();
+            }
+            else if (pieceChar == 'n' || pieceChar == 'N')
+            {
+                piece = new Knight();
+            }
+            else if (pieceChar == 'p' || pieceChar == 'P')
+            {
+                piece = new Pawn();
+            }
+            if (pieceChar < 90) // light vs dark
+            {
+                piece.Color = Color.Dark;
+            }
+            else
+            {
+                piece.Color = Color.Light;
+            }
+            return piece;
+        }
+    
 
         /// <summary>
         /// takes input string and a regex pattern. tests the pattern and if successful prints the results

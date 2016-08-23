@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChessFileIO.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ChessFileIO.Models
 {
-    class ChessCoordinate
+    public class ChessCoordinate
     {
         public char File { get; set; }
 
@@ -15,6 +16,18 @@ namespace ChessFileIO.Models
         public override string ToString()
         {
             return File + "" + Rank;
+        }
+
+        public ChessCoordinate(char file, int rank)
+        {
+            File = file;
+            Rank = rank;
+        }
+
+        public ChessCoordinate()
+        {
+            File = File;
+            Rank = Rank;
         }
 
         public int FileAsInt() // need to check this

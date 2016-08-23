@@ -1,4 +1,5 @@
-﻿using ChessFileIO.Models;
+﻿using ChessFileIO.Controllers;
+using ChessFileIO.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,32 +12,21 @@ namespace ChessFileIO
     {
         public static void Main(string[] args)
         {
-            Run(args);
+            Run(args);           
         }
 
         public static void Run(string[] args)
         {
             ChessIO IO = new ChessIO();
             ChessBoard board = new ChessBoard();
-            ChessCoordinate cc = new ChessCoordinate { File = 'a', Rank = 4 };
-            ChessCoordinate end = new ChessCoordinate { File = 'd', Rank = 2 };
-            board.InitBoard();
-            //board.SetBoardForGame();
-            board.PrintBoard();
+            PieceController controller = new PieceController();
+            Game game = new Game();
 
-            IO.ReadChessFile(args[0], board);
-            //IO.ReadInput("a2 d4", board);
+            board.InitBoard(); // puts a default '-' in every space for display purposes
+            controller.PlacePiecesInStartPosition(board);
+            board.PrintBoard();
+            IO.ReadChessFile(args[0], controller, board, game);
             
-            //board.PlacePiece(cc, 'n');
-            //board.PrintBoard();
-            //Console.WriteLine();
-            //Console.WriteLine();
-            //board.MovePiece(cc, end);
-            //IO.ReadInput("f1 d1");
-            //IO.ReadInput("f1 d1");
-            //IO.ReadInput("f1 d1*");
-            //IO.ReadInput("Kdb4");
-            //IO.ReadInput("e1 g1 h1 f1");
         }
     }
 }
